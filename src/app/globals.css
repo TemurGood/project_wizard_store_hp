@@ -1,0 +1,334 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+DW+Pica+SC&family=IM+Fell+DW+Pica:ital@0;1&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap');
+
+:root {
+  --parchment-bg: #fff3c9;
+  --parchment-card: #faecc0;
+  --parchment-deep: #facf7f;
+  --parchment-dark: #e8be70;
+  --ink-crimson: #8b0000;
+  --ink-crimson-dark: #5a0000;
+  --ink-brown: #2b1704;
+  --ink-muted: #5c3a1e;
+  --gold-brass: #c59b27;
+  --gold-bright: #ffd700;
+  --emerald-magic: #1a472a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ==================== CORE OLDBOOK.CSS RULES ==================== */
+html {
+  background-color: #fff3c9;
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(250, 207, 127, 0.35) 0%, transparent 50%),
+    radial-gradient(circle at 80% 85%, rgba(139, 0, 0, 0.06) 0%, transparent 55%),
+    repeating-linear-gradient(0deg, rgba(139, 69, 19, 0.018) 0px, rgba(139, 69, 19, 0.018) 1px, transparent 1px, transparent 3px);
+  color: var(--ink-brown);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 1280px;
+  padding: 0 16px 60px;
+  font-family: 'IM Fell DW Pica', 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--ink-brown);
+}
+
+h1 {
+  font-family: "IM Fell DW Pica SC", "Cinzel Decorative", "Cormorant Garamond", serif;
+  color: #8b0000;
+  font-size: 2.8rem;
+  margin: 0.2em auto;
+  text-align: center;
+  font-weight: normal;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+h2 {
+  font-family: "IM Fell DW Pica SC", "Cinzel", "Cormorant Garamond", serif;
+  font-weight: normal;
+  color: #8b0000;
+  font-size: 2.1rem;
+  border-bottom: 3px solid #8b0000;
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+  padding-bottom: 4px;
+}
+
+h3 {
+  font-family: "IM Fell DW Pica SC", "Cinzel", "Cormorant Garamond", serif;
+  font-weight: normal;
+  font-size: 1.55rem;
+  color: #8b0000;
+  margin-top: 0.3em;
+  margin-bottom: 8px;
+}
+
+h4 {
+  font-family: "IM Fell DW Pica", "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.3rem;
+  color: #8b0000;
+  margin: 0.2em 0;
+}
+
+b, th {
+  color: #8b0000;
+  font-family: "IM Fell DW Pica SC", "Cormorant Garamond", serif;
+  font-weight: 700;
+}
+
+blockquote {
+  border-left: 4px solid #8b0000;
+  border-right: 4px solid #8b0000;
+  background-color: #facf7f;
+  margin: 1em 0;
+  padding: 0.75em 16px;
+  font-style: italic;
+  box-shadow: inset 0 0 12px rgba(139, 0, 0, 0.08);
+}
+
+table {
+  border: 3px solid #8b0000;
+  border-collapse: collapse;
+  width: 100%;
+  background-color: rgba(255, 248, 220, 0.75);
+}
+
+th, td {
+  border: 1px solid #8b0000;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #facf7f;
+  font-size: 1.05rem;
+}
+
+code {
+  font-family: "Courier New", monospace;
+  background: rgba(139, 0, 0, 0.09);
+  padding: 2px 6px;
+  border: 1px dashed rgba(139, 0, 0, 0.35);
+  color: #5a0000;
+  font-size: 0.92em;
+}
+
+.has-dropcap::first-letter {
+  font-family: "IM Fell DW Pica SC", "Cinzel Decorative", Georgia, serif;
+  float: left;
+  font-size: 3.9rem;
+  line-height: 0.72;
+  margin: 0.08em 0.14em 0.1em 0;
+  color: #8b0000;
+  text-shadow: 1px 1px 0 #facf7f;
+}
+
+/* ==================== MAGICAL SPELLBOOK COMPONENTS ==================== */
+.spellbook-shell {
+  border: 4px double #8b0000;
+  background: linear-gradient(180deg, #fff7d6 0%, #fce8b2 100%);
+  box-shadow:
+    0 10px 30px rgba(74, 24, 4, 0.18),
+    inset 0 0 40px rgba(212, 148, 58, 0.22);
+  padding: 20px;
+  position: relative;
+}
+
+.spellbook-card {
+  border: 2px solid #8b0000;
+  background: linear-gradient(160deg, #fff9df 0%, #f8df9d 100%);
+  padding: 16px;
+  position: relative;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, border-color 0.28s ease;
+  box-shadow: 0 4px 12px rgba(92, 42, 12, 0.12);
+}
+
+.spellbook-card:hover {
+  transform: translateY(-5px) scale(1.01);
+  border-color: #b8860b;
+  box-shadow:
+    0 12px 26px rgba(139, 0, 0, 0.22),
+    0 0 18px rgba(255, 215, 0, 0.45);
+}
+
+.wand-sparkle-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.wand-sparkle-hover::after {
+  content: "✦ ✧ ✦";
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.85rem;
+  color: #b8860b;
+  opacity: 0;
+  transform: translateY(4px) scale(0.8);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+
+.wand-sparkle-hover:hover::after {
+  opacity: 1;
+  transform: translateY(0) scale(1.08);
+}
+
+/* Parchment Flip Animation */
+@keyframes parchmentFlip {
+  0% {
+    opacity: 0;
+    transform: perspective(900px) rotateY(-6deg) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) translateY(0);
+  }
+}
+
+.parchment-page-turn {
+  animation: parchmentFlip 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Ink-style Buttons */
+.ink-btn {
+  font-family: "IM Fell DW Pica SC", "Cinzel", "Cormorant Garamond", serif;
+  background: linear-gradient(180deg, #8b0000 0%, #5e0000 100%);
+  color: #fff3c9;
+  border: 2px solid #d4af37;
+  padding: 9px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 3px 8px rgba(90, 0, 0, 0.25);
+}
+
+.ink-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #a60505 0%, #750000 100%);
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.65);
+  transform: translateY(-1px);
+}
+
+.ink-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ink-btn-secondary {
+  font-family: "IM Fell DW Pica SC", "Cinzel", "Cormorant Garamond", serif;
+  background: #facf7f;
+  color: #8b0000;
+  border: 2px solid #8b0000;
+  padding: 8px 16px;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-decoration: none;
+}
+
+.ink-btn-secondary:hover:not(:disabled) {
+  background: #8b0000;
+  color: #fff3c9;
+}
+
+.ink-btn-active {
+  background: #8b0000 !important;
+  color: #fff3c9 !important;
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 12px rgba(139, 0, 0, 0.35);
+}
+
+.ink-input,
+.ink-select,
+.ink-textarea {
+  width: 100%;
+  background: #fff9e6;
+  border: 2px solid #8b0000;
+  padding: 9px 12px;
+  font-family: 'IM Fell DW Pica', 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+  color: #2b1704;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ink-input:focus,
+.ink-select:focus,
+.ink-textarea:focus {
+  border-color: #b8860b;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 12, 2, 0.76);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal-scroll {
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 780px;
+  border: 4px double #8b0000;
+  background: linear-gradient(180deg, #fff5d0 0%, #f7dc9c 100%);
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
+  position: relative;
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1.5px solid #8b0000;
+  background: #facf7f;
+  color: #8b0000;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.grid-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+  h2 {
+    font-size: 1.55rem;
+  }
+  .spellbook-shell {
+    padding: 12px;
+  }
+}
+
