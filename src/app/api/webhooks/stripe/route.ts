@@ -26,7 +26,10 @@ export async function POST(req: NextRequest) {
     const eventType = event.type || "checkout.session.completed";
     if (
       eventType !== "checkout.session.completed" &&
-      eventType !== "payment_intent.succeeded"
+      eventType !== "checkout.session.async_payment_succeeded" &&
+      eventType !== "payment_intent.succeeded" &&
+      eventType !== "charge.succeeded" &&
+      eventType !== "invoice.paid"
     ) {
       return NextResponse.json({ received: true, ignored: eventType });
     }
@@ -42,10 +45,14 @@ export async function POST(req: NextRequest) {
     );
 
     if (!checkoutId) {
-      return NextResponse.json(
-        { error: "Missing checkout_id in Stripe webhook payload" },
-        { status: 400 }
-      );
+      // Real Stripe webhook event without checkout_id (e.g. charge.succeeded / invoice.paid / payment_intent.succeeded)
+      return NextResponse.json({
+        received: true,
+        webhook_id: "we_1UbO01AmUn3wtQDD5ifY1lMC",
+        workbench_webhook: STRIPE_WORKBENCH_URL,
+        event_type: eventType,
+        stripe_object_id: dataObj.id || null,
+      });
     }
 
     // Validate test card in simulator mode (4242 4242 4242 4242)
@@ -91,7 +98,34 @@ export async function POST(req: NextRequest) {
       .toString(36)
       .slice(2, 5)
       .toUpperCase()}`;
-    const paymentTxId = dataObj.id || `pi_test_${Date.now()}`;
+    let paymentTxId = dataObj.id || `pi_test_${Date.now()}`;
+
+    // If STRIPE_SECRET_KEY is configured, create & confirm a real PaymentIntent in Stripe Test Mode
+    if (process.env.STRIPE_SECRET_KEY && !sig) {
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        const amountCents = Math.max(50, Math.round(Number(pending.total_usd) * 100));
+        const pi = await stripe.paymentIntents.create({
+          amount: amountCents,
+          currency: "usd",
+          payment_method: "pm_card_visa",
+          confirm: true,
+          automatic_payment_methods: {
+            enabled: true,
+            allow_redirects: "never",
+          },
+          description: `Good Diagon Alley — Order ${orderId} (${pending.customer_login})`,
+          metadata: {
+            order_id: orderId,
+            checkout_id: checkoutId,
+            customer_login: String(pending.customer_login || ""),
+          },
+        });
+        paymentTxId = pi.id;
+      } catch (stripeErr: any) {
+        console.warn("[Stripe API Test PaymentIntent Fallback]:", stripeErr.message);
+      }
+    }
 
     // Update pending checkout state to Paid (2)
     await query(
