@@ -340,10 +340,48 @@ export function DiagonAlleyApp({
       if (savedFavs) {
         setFavoriteIds(JSON.parse(savedFavs));
       }
+
+      // Check if returning from official checkout.stripe.com
+      const params = new URLSearchParams(window.location.search);
+      const stripeSessionId = params.get("stripe_session_id");
+      const stripeCheckoutId = params.get("checkout_id");
+      const stripeCanceled = params.get("stripe_canceled");
+
+      if (stripeSessionId || stripeCheckoutId) {
+        window.history.replaceState({}, "", window.location.pathname);
+        fetch(
+          `/api/checkout/stripe-session?session_id=${encodeURIComponent(
+            stripeSessionId || ""
+          )}&checkout_id=${encodeURIComponent(stripeCheckoutId || "")}`
+        )
+          .then((r) => r.json())
+          .then((data) => {
+            if (data?.order) {
+              setCompletedReceipt({
+                order: data.order,
+                telegram_deep_link: `https://t.me/wizard_HP_store_bot?start=order_${data.order.id}`,
+                provider_label:
+                  "Stripe Hosted Checkout (checkout.stripe.com • Paid)",
+              });
+              localStorage.setItem("gda_cart", JSON.stringify([]));
+              setCart([]);
+              fetchAdminOrders();
+              showToast(
+                `🎉 Оплата через checkout.stripe.com прошла успешно! Заказ ${data.order.id}`
+              );
+            }
+          })
+          .catch((err) => {
+            console.error("Stripe session verification error:", err);
+          });
+      } else if (stripeCanceled) {
+        window.history.replaceState({}, "", window.location.pathname);
+        showToast("ℹ️ Оплата на странице checkout.stripe.com была отменена.");
+      }
     } catch {
       // Ignore storage errors
     }
-  }, [fetchStoreData, fetchLeaderboardData, fetchAdminOrders, refreshUserProfile]);
+  }, [fetchStoreData, fetchLeaderboardData, fetchAdminOrders, refreshUserProfile, showToast]);
 
   // Background poll of Telegram Bot updates so live location messages sent to @wizard_HP_store_bot sync automatically
   useEffect(() => {
@@ -530,6 +568,33 @@ export function DiagonAlleyApp({
     } catch (err: any) {
       setPaymentError(err.message);
     } finally {
+      setPaymentProcessing(false);
+    }
+  };
+
+  // Redirect to real official checkout.stripe.com Hosted Checkout page
+  const redirectToStripeHostedCheckout = async () => {
+    if (!pendingCheckoutData) return;
+    setPaymentProcessing(true);
+    setPaymentError("");
+    try {
+      const res = await fetch("/api/checkout/stripe-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          checkout_id: pendingCheckoutData.id,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(
+          data.error || "Не удалось создать сессию checkout.stripe.com"
+        );
+      }
+      playMagicalTone("flip", soundEnabled);
+      window.location.href = data.url;
+    } catch (err: any) {
+      setPaymentError(err.message);
       setPaymentProcessing(false);
     }
   };
@@ -3118,11 +3183,9 @@ export function DiagonAlleyApp({
             </div>
 
             <blockquote>
-              <b>Тестовая карта Stripe:</b> Используйте карту{" "}
-              <code>4242 4242 4242 4242</code> (любой срок и CVC). При нажатии «Оплатить» вызывается вебхук{" "}
-              <code>/api/webhooks/stripe</code> (Workbench:{" "}
-              <code>we_1UbO01AmUn3wtQDD5ifY1lMC</code>), который подтверждает транзакцию и записывает заказ в таблицу <code>orders</code> со статусом{" "}
-              <code>Paid - Awaiting Delivery Location</code>.
+              <b>Официальная оплата Stripe (Test Mode):</b> Вы можете перейти на официальную защищённую страницу{" "}
+              <code>checkout.stripe.com</code> или оплатить тестовой картой{" "}
+              <code>4242 4242 4242 4242</code> прямо в окне ниже. Обе опции создают реальную транзакцию в вашем аккаунте Stripe (<code>acct_1UacpqAmUn3wtQDD</code>) и сохраняют заказ в таблицу <code>orders</code>.
             </blockquote>
 
             {paymentError && (
@@ -3130,6 +3193,45 @@ export function DiagonAlleyApp({
                 ⚠️ {paymentError}
               </p>
             )}
+
+            <div
+              className="spellbook-card"
+              style={{
+                marginBottom: "16px",
+                background: "linear-gradient(180deg, #fff5d6 0%, #f5deb3 100%)",
+                border: "2px solid #635bff",
+              }}
+            >
+              <h4 style={{ marginTop: 0, color: "#3b368c" }}>
+                🌐 Способ 1 (Рекомендуется): Официальная страница checkout.stripe.com
+              </h4>
+              <p style={{ margin: "6px 0 12px", fontSize: "0.95rem" }}>
+                Создаёт настоящую сессию <code>Stripe Checkout Session</code> и перенаправляет вас на{" "}
+                <b>https://checkout.stripe.com</b> для ввода тестовой карты <code>4242 4242 4242 4242</code>. После оплаты вы автоматически вернётесь обратно к выбору точки доставки на Карте Мародёров!
+              </p>
+              <button
+                type="button"
+                className="ink-btn"
+                style={{
+                  width: "100%",
+                  background: "linear-gradient(180deg, #635bff 0%, #4338ca 100%)",
+                  borderColor: "#ffd700",
+                  fontSize: "1.05rem",
+                }}
+                disabled={paymentProcessing}
+                onClick={redirectToStripeHostedCheckout}
+              >
+                {paymentProcessing
+                  ? "⏳ Перенаправление на checkout.stripe.com..."
+                  : `🔒 Перейти к оплате $${Number(
+                      pendingCheckoutData.total_usd
+                    ).toFixed(2)} на checkout.stripe.com ↗`}
+              </button>
+            </div>
+
+            <h4 style={{ marginBottom: "8px" }}>
+              ⚡ Способ 2: Быстрая оплата прямо внутри сайта (Direct Stripe API)
+            </h4>
 
             <form
               onSubmit={confirmStripePayment}

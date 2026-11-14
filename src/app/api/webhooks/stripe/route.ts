@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { query } from "@/lib/db";
+import { getStripeClient } from "@/lib/stripe";
 
 const STRIPE_WORKBENCH_URL =
   "https://dashboard.stripe.com/acct_1UacpqAmUn3wtQDD/test/workbench/webhooks/we_1UbO01AmUn3wtQDD5ifY1lMC";
@@ -98,32 +99,42 @@ export async function POST(req: NextRequest) {
       .toString(36)
       .slice(2, 5)
       .toUpperCase()}`;
-    let paymentTxId = dataObj.id || `pi_test_${Date.now()}`;
+    let paymentTxId = String(
+      dataObj.payment_intent || dataObj.id || `pi_test_${Date.now()}`
+    );
 
-    // If STRIPE_SECRET_KEY is configured, create & confirm a real PaymentIntent in Stripe Test Mode
-    if (process.env.STRIPE_SECRET_KEY && !sig) {
+    // If Stripe client is available and this is an inline checkout request, create & confirm a real PaymentIntent in Stripe Test Mode
+    if (!sig && !paymentTxId.startsWith("pi_")) {
       try {
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-        const amountCents = Math.max(50, Math.round(Number(pending.total_usd) * 100));
-        const pi = await stripe.paymentIntents.create({
-          amount: amountCents,
-          currency: "usd",
-          payment_method: "pm_card_visa",
-          confirm: true,
-          automatic_payment_methods: {
-            enabled: true,
-            allow_redirects: "never",
-          },
-          description: `Good Diagon Alley — Order ${orderId} (${pending.customer_login})`,
-          metadata: {
-            order_id: orderId,
-            checkout_id: checkoutId,
-            customer_login: String(pending.customer_login || ""),
-          },
-        });
-        paymentTxId = pi.id;
+        const stripe = await getStripeClient();
+        if (stripe) {
+          const amountCents = Math.max(
+            50,
+            Math.round(Number(pending.total_usd) * 100)
+          );
+          const pi = await stripe.paymentIntents.create({
+            amount: amountCents,
+            currency: "usd",
+            payment_method: "pm_card_visa",
+            confirm: true,
+            automatic_payment_methods: {
+              enabled: true,
+              allow_redirects: "never",
+            },
+            description: `Good Diagon Alley — Order ${orderId} (${pending.customer_login})`,
+            metadata: {
+              order_id: orderId,
+              checkout_id: checkoutId,
+              customer_login: String(pending.customer_login || ""),
+            },
+          });
+          paymentTxId = pi.id;
+        }
       } catch (stripeErr: any) {
-        console.warn("[Stripe API Test PaymentIntent Fallback]:", stripeErr.message);
+        console.warn(
+          "[Stripe API Test PaymentIntent Fallback]:",
+          stripeErr.message
+        );
       }
     }
 
